@@ -18,5 +18,9 @@ format:
 
 all_checks: check_syntax lint format  
 
-generate: all_checks
-	./gen.sh
+clean:
+	rm -rf ./releases/
+
+generate:
+	./deploy/gen.sh
+

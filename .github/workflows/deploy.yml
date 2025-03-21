@@ -1,53 +1,49 @@
+
+on: push
+
+permissions:
+  contents: write
+
 jobs:
 
-  on:
-    push:
-      branches:
-        - main
 
   validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Build
-        run: |
-          make all
-
-  generate: 
-
-    needs: check
-
-    steps:
-      
-      - name: Generate
-        run: |
-            make generate
+        uses: dhall-lang/setup-dhall@v4
+        with:
+          version: '1.30.0'
+      - run: |
+          make all_checks
 
   # Deploy job
   deploy:
     # Add a dependency to the build job
-    needs: generate
+    needs: validate
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write      # to deploy to Pages
       id-token: write   # to verify the deployment originates from an appropriate source
+      contents: write   
 
     # Deploy to the github-pages environment
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    # Specify runner + deployment step
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Generate
+        run: |
+            make generate
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          site-directory: ./out
-          target-branch: gh-pages
-          commit-message: Deploy site
-          publish-token: ${{ secrets.GITHUB_TOKEN }}
+            folder: releases
